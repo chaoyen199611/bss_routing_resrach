@@ -7,7 +7,7 @@ lam = 1.5
 mu = 2
 
 # Define the initial probability distribution
-P0 = np.array([0.0, 0.0, 0.0,1.0])
+P0 = np.array([0.0, 1.0, 0.0,0.0])
 
 # Define the time interval and step size
 t0 = 0.0
@@ -41,7 +41,7 @@ result = np.zeros((Nt+1, 4))
 result = (1 - P[:0])
 total = 0
 for i in range(Nt):
-    total+=(1-P[i,0])*mu
+    total+=(1-P[i,3])*mu
 
 print("gi(s,0,15) : {}".format(total/(mu*Nt)))
 
