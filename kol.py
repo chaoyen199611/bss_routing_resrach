@@ -73,15 +73,3 @@ def rk4(P,capacity,t0,dt,Nt,mu,lam,type):
 
 
 
-
-
-
-
-# plt.plot(np.linspace(t0, tf, Nt+1), P[:,0], label='P0')
-# plt.plot(np.linspace(t0, tf, Nt+1), P[:,1], label='P1')
-# plt.plot(np.linspace(t0, tf, Nt+1), P[:,2], label='P2')
-# plt.plot(np.linspace(t0, tf, Nt+1), P[:,3], label='P3')
-# plt.xlabel('Time')
-# plt.ylabel('Probability')
-# plt.legend()
-# plt.show()
