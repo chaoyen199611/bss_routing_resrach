@@ -33,10 +33,11 @@ station_info['capacity'] = station_info['bike']+station_info['free']
 trip_record = pd.read_csv('test.csv')
 trip_record.columns=["start_time","end_time","startid","endid"]
 station_num = station_info['id'].nunique()
-cap=list(station_info['capacity'][:51])
+cap=list(station_info['capacity'][:station_num ])
+start = list(station_info['bike'][:station_num ])
 station_list = list(station_info['id'].unique())
-result = np.zeros((station_num,2))
-print(result[:,0])
+result = np.zeros((station_num,5))
+
 print(station_num)
 for i in range(station_num):
     station = station_list[i]
@@ -47,8 +48,12 @@ for i in range(station_num):
     print(station)
 
     result[i][0],result[i][1] = kolmogorov_forward_equation(mu,lam,cap[i])
+    result[i][2] = station
+    result[i][3] = cap[i]
+    result[i][4] = start[i]
 
-df = pd.DataFrame(result, columns = ['smin','smax'])
+
+df = pd.DataFrame(result, columns = ['smin','smax','id','capacity','start'])
 df.to_csv('result.csv')
 
 def hat_graph(ax, xlabels, values, group_labels):
