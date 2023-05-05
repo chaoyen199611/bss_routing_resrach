@@ -26,6 +26,10 @@ for i in range (len(capacity)):
     y = np.array([capacity[i], smax_bound[i], smin_bound[i],0])
     if start[i]<=smin_bound[i] or start[i]>=smax_bound[i]:
         plt.plot(i+1,start[i], marker='^', ls='none',mec='black',mfc='black',ms=3)
+        if start[i]<=smin_bound[i]:
+            print("minor : ",start[i])
+        else:
+            print("greater : ",start[i])
     else:
         plt.plot(i+1,start[i], marker='.', ls='none',mec='black',mfc='black')
 
