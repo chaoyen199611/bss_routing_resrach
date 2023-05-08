@@ -100,7 +100,7 @@ for v in range(vehicle_num):
 
 
 model.optimize()
-#
+#model.optimize(max_seconds_same_incumbent=7200)
 
 
 # for j in range(len(station)):
