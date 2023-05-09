@@ -99,7 +99,7 @@ for v in range(vehicle_num):
         model += (xsum(y_minus[v][t][i] - y_plus[v][t][i]for i in range(len(S)) for t in range(g+1)) + q[v])<=Qv
 
 
-model.optimize()
+model.optimize(max_seconds=14400)
 #model.optimize(max_seconds_same_incumbent=7200)
 
 
@@ -127,7 +127,7 @@ for t in range(time_interval):
     for v in range(vehicle_num):
         for i in range(len(station)):
             for j in range(len(station)):
-                if x[0][t][j][i].x!= False:
+                if x[v][t][j][i].x!= False:
                     print("vehicle_num : {} time_interval : {} arc i{} to j{}".format(v,t,i,j))
 
 
