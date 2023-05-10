@@ -12,7 +12,7 @@ declare TRUCKCAP=14
 FILENAME="$STRDATE-$ENDDATE-$MIPMAXSEC"
 
 FUNCTION=$1;
-11
+
 echo -e "start info:\n=================================\nstart date : \
         $STRDATE\nend date : $ENDDATE\nstart time : $STRT\nend time : $ENDT\ntarget area : $AREA \
         \ntruck number : $VEHICLENUM\ncapacity : $TRUCKCAP\nmax time : $MIPMAXSEC sec\n" >&1 | tee log/$FILENAME.txt;
