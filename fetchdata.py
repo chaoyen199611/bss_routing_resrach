@@ -20,7 +20,7 @@ def fetchdata(start_date,end_date,start_time,end_time,area):
     target_station_id = list(station_info["id"])
     station_condition = station_condition.loc[station_condition['id'].isin(target_station_id)]
     station_condition["capacity"]=station_condition["bike"]+station_condition["free"]
-    print(station_condition)
+
 
     df["rent_time"]=pd.to_datetime(df["rent_time"])
     df["time"]=pd.to_datetime(df["time"])
