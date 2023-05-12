@@ -21,3 +21,5 @@ STATION_NUM=`python bss_routing.py $STRDATE $ENDDATE $STRT $ENDT $AREA $FUNCTION
 
 echo -e "start gurobi mip routing optimization.......\n=================================\n" >&1 | tee -a log/$FILENAME.txt;
 python routing.py $VEHICLENUM $STATION_NUM $TRUCKCAP $MIPMAXSEC >&1 | tee -a log/$FILENAME.txt;
+
+python result.py >&1 | tee -a log/mip-$MIPMAXSEC-result.txt;

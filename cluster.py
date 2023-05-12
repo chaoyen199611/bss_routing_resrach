@@ -2,8 +2,10 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_csv('data/test_result.csv')
-begin = pd.read_csv("result.csv")
+df = pd.read_csv('data/service_level_result.csv')
+# begin = pd.read_csv("result.csv")
+
+print(df)
 
 df.columns=["id","rid","bike","recordtime","freespace","active","idd","area"]
 
