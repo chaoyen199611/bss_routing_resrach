@@ -18,10 +18,6 @@ class Agent:
         service_level(self.station_num)
         draw()
 
-
-    
-
-
 if __name__=='__main__':
     argc = len(sys.argv)
 
