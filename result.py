@@ -15,6 +15,10 @@ def mip_routing_result():
     df["after3"] = station_condition["bike"]
     
     print(df)
+    result = np.load("data/np_save.npy")
+
+    #np shape(vehicle num, time interval, drop & pickup, arc)
+    print(result)
     
 
 
