@@ -145,8 +145,7 @@ def gurobimip(vehicle_num,station_num,truck_capacity,maxsec):
 
 
     np.save('data/np_save', result_np)
-
-
+    
     x_cord = list(original.index)
     y_cord = list(original["start"])
     y_cord2 = list(df["start"])
