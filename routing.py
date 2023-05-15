@@ -17,7 +17,7 @@ def gurobimip(vehicle_num,station_num,truck_capacity,maxsec):
     original = df.copy()
 
     # time_interval is based on how many insufficient stations
-    time_interval = station_num-insufficent
+    time_interval = insufficent
 
     # initial inventory
     q = np.zeros((vehicle_num))

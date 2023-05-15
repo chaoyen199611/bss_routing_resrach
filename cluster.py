@@ -25,6 +25,7 @@ for i in range(len(df)):
     s_minus[i] = max(sminuslist[i],0)
 
 insufficent = (df["start"]<df["smin"]) | (df["start"]>df["smax"])
+time_interval = insufficent
 
 start = list(df["start"])
 smin = list(df["smin"])
@@ -42,7 +43,8 @@ station.reset_index(inplace=True,drop=True)
 
 
 S = set(df.index)
-
+N = S.copy()
+N.add(-1)
 
 distance_matrix = np.zeros((len(S),len(S)))
 
@@ -81,8 +83,6 @@ for v in range(vehicle_num):
     model += (q[v]+xsum(start[i]*z[v][i] for i in range(len(S))) >= xsum(smin[i]*z[v][i] for i in range(len(S))))
     model += (-(Qv-q[v])+xsum(start[i]*z[v][i] for i in range(len(S))) <= xsum(smax[i]*z[v][i] for i in range(len(S))))
     
-
-
 for v in range(vehicle_num):
     for i in range(len(S)):
         model += (h[v] >= xsum(distance_matrix[i][j] * (z[v][i]+z[v][j]-1) for j in range(len(S)))+xsum((d_plus*s_plus[j]+d_minus*s_minus[j])*z[v][j] for j in range(len(S))))
@@ -102,13 +102,15 @@ for i in range(len(S)):
         vehicle1_cluster.append(i)
     if z[1][i].x==1:
         vehicle2_cluster.append(i)
-        
+
+
 vehicle1_cluster_df = station.loc[vehicle1_cluster]
 
 vehicle1_cluster_df.drop_duplicates(inplace = True)
 
 vehicle2_cluster_df = station.loc[vehicle2_cluster]
 vehicle2_cluster_df.drop_duplicates(inplace = True)
+
 
 fig, (ax1, ax2) = plt.subplots(1, 2)
 
@@ -126,13 +128,111 @@ for i in range(len(result[0])):
         check = np.concatenate((check,result[0][i][0][1]),axis=None)
     if result[1][i][0][0]!=0 and result[1][i][0][1]!=0:
         check2 = np.concatenate((check2,result[1][i][0][1]),axis=None)
-print(check)
-print(check2)
+
+
+
 vehicle1_noncluster_df = station.loc[check]
 vehicle1_noncluster_df.drop_duplicates(inplace = True)
+vehicel1_station_condition = df.loc[vehicle1_cluster]
 
 vehicle2_noncluster_df = station.loc[check2]
 vehicle2_noncluster_df.drop_duplicates(inplace = True)
+vehicel2_station_condition = df.loc[vehicle1_cluster]
+
+
+vehicle1_cluster_df.reset_index(inplace=True,drop=True)
+vehicel1_station_condition.reset_index(inplace=True,drop=True)
+print(vehicle1_cluster_df)
+print(vehicel1_station_condition)
+
+
+time_interval = len(vehicle1_cluster_df)
+vehicle_num=1
+q = np.zeros(1)
+    # truck capacity
+Qv = truck_capacity
+
+S = set(vehicle1_cluster_df.index)
+N = S.copy()
+N.add(-1)
+
+distance_matrix = np.zeros((len(S),len(N)))
+
+for row in range(len(S)):
+    for col in range(row,len(N)):
+        if row == col:
+            distance_matrix[row][col]=0
+        else:
+            if col == len(N)-1:
+                distance_matrix[row][col] = 0
+            else:
+                coords_1 = (vehicle1_cluster_df.loc[row]["lat"],vehicle1_cluster_df.loc[row]["lng"])
+                coords_2 = (vehicle1_cluster_df.loc[col]["lat"],vehicle1_cluster_df.loc[col]["lng"])
+                distance_matrix[row][col] = haversine(coords_1,coords_2)*1000
+                distance_matrix[col][row] = haversine(coords_1,coords_2)*1000
+
+model = Model()
+h =0
+x = [[[[model.add_var(var_type = BINARY) for i in range(len(S))]for j in range(len(N))]for t in range(time_interval)]for v in range(vehicle_num)]
+y_plus = [[[model.add_var(var_type = INTEGER) for i in range(len(S))]for t in range(time_interval)]for v in range(vehicle_num)]
+y_minus = [[[model.add_var(var_type = INTEGER) for i in range(len(S))]for t in range(time_interval)]for v in range(vehicle_num)]
+
+for v in range(vehicle_num):
+    h += (xsum(distance_matrix[i][j]*x[v][t][i][j] for i in range(len(S)) for j in range(len(S)) for t in range(time_interval))
+        +xsum(d_minus*y_minus[v][t][i] for i in range(len(S)) for t in range(time_interval))
+        +xsum(d_plus*y_plus[v][t][i] for i in range(len(S)) for t in range(time_interval)))
+
+model.objective = minimize(h)
+    #model constraint
+
+for i in range(len(S)):
+    model += (xsum(y_plus[v][t][i]-y_minus[v][t][i] for t in range(time_interval) for v in range(vehicle_num))+vehicel1_station_condition.loc[i]["start"])>= vehicel1_station_condition.loc[i]["smin"]
+    model += (xsum(y_plus[v][t][i]-y_minus[v][t][i] for t in range(time_interval) for v in range(vehicle_num))+vehicel1_station_condition.loc[i]["start"])<= vehicel1_station_condition.loc[i]["smax"]
+
+for v in range(vehicle_num):
+    model += xsum(x[v][0][j][i] for i in range(len(S)) for j in range(len(N))) <=1
+
+for i in range(len(S)):
+    for t in range(1,time_interval):
+        for v in range(vehicle_num):
+            model += xsum(x[v][t][j][i] for j in range(len(N))) <= xsum(x[v][t-1][i][j] for j in range(len(S)))
+
+model += xsum(x[v][t][i][i] for i in range(len(S)) for t in range(time_interval) for v in range(vehicle_num)) == 0  
+
+for v in range(vehicle_num):
+    for t in range(time_interval):
+        for i in range(len(S)):        
+            model += (xsum(x[v][t][j][i] for j in range(len(N)))*Qv) >= y_minus[v][t][i]
+            model += (xsum(x[v][t][i][j] for j in range(len(S)))*Qv) >= y_plus[v][t][i]
+
+for i in range(len(S)):
+    model += xsum(y_minus[v][t][i] for t in range(time_interval) for v in range(vehicle_num)) <= vehicel1_station_condition.loc[i]["start"]
+    model += xsum(y_plus[v][t][i] for t in range(time_interval) for v in range(vehicle_num)) <= vehicel1_station_condition.loc[i]["capacity"] - vehicel1_station_condition.loc[i]["start"]
+
+for v in range(vehicle_num):
+    for g in range(time_interval):
+        model += (xsum(y_minus[v][t][i] - y_plus[v][t][i]for i in range(len(S)) for t in range(g+1)) + q[v])>=0
+        model += (xsum(y_minus[v][t][i] - y_plus[v][t][i]for i in range(len(S)) for t in range(g+1)) + q[v])<=Qv
+
+
+model.optimize()
+
+
+for t in range(time_interval):
+    for i in range(len(S)):
+        for j in range(len(S)):
+            if x[0][t][j][i].x!= False:
+                print("vehicle_num : {} time_interval : {} arc i{} to j{}".format(0,t,i,j))
+                if(y_plus[0][t][i].x!=0):
+                    print("vehicle_num : {} time_interval : {} station : {} drop_off : {}".format(0,t,i,y_plus[0][t][i].x))
+                    #vehicle drop off amount at time interval t and station i
+                if(y_minus[0][t][i].x!=0):
+                    print("vehicle_num : {} time_interval : {} station : {} pick_up : {}".format(0,t,i,y_minus[0][t][i].x))
+                if(y_plus[0][t][j].x!=0):
+                    print("vehicle_num : {} time_interval : {} station : {} drop_off : {}".format(0,t,j,y_plus[0][t][j].x))
+                    #vehicle drop off amount at time interval t and station i
+                if(y_minus[v][t][j].x!=0):
+                    print("vehicle_num : {} time_interval : {} station : {} pick_up : {}".format(0,t,j,y_minus[0][t][j].x))
 
 ax2.scatter(x=vehicle1_noncluster_df['lng'], y=vehicle1_noncluster_df['lat'])
 ax2.scatter(x=vehicle2_noncluster_df['lng'], y=vehicle2_noncluster_df['lat'])
