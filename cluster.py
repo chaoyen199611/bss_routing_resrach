@@ -65,13 +65,12 @@ d_plus = 357
 
 model = Model()
 
-h = [model.add_var(var_type= INTEGER) for v in range(vehicle_num)]
+h = [model.add_var(var_type= INTEGER)for v in range(vehicle_num)]
 z = [[model.add_var(var_type= BINARY) for i in range(len(S))] for v in range(vehicle_num)] 
 
 total=0
 
-for v in range(vehicle_num):
-    total += h[v]
+
     
 for i in df[insufficent].index:
     model += xsum(z[v][i] for v in range(vehicle_num)) == 1
@@ -85,14 +84,18 @@ for v in range(vehicle_num):
     
 for v in range(vehicle_num):
     for i in range(len(S)):
-        model += (h[v] >= xsum(distance_matrix[i][j] * (z[v][i]+z[v][j]-1) for j in range(len(S)))+xsum((d_plus*s_plus[j]+d_minus*s_minus[j])*z[v][j] for j in range(len(S))))
-        model += (h[v] >= xsum(distance_matrix[i][j] * (z[v][i]+z[v][j]-1) for j in range(len(S)))+xsum((d_plus*s_plus[j]+d_minus*s_plus[j])*z[v][j] for j in range(len(S)))-d_minus*q[v])
-        model += (h[v] >= xsum(distance_matrix[i][j] * (z[v][i]+z[v][j]-1) for j in range(len(S)))+xsum((d_plus*s_minus[j]+d_minus*s_minus[j])*z[v][j] for j in range(len(S)))-d_plus*(Qv-q[v]))
+        model += h[v] >= xsum(distance_matrix[i][j] * (z[v][i]+z[v][j]-1) for j in range(len(S)))+xsum((d_plus*s_plus[j]+d_minus*s_minus[j])*z[v][j] for j in range(len(S)))
+        model += h[v] >= xsum(distance_matrix[i][j] * (z[v][i]+z[v][j]-1) for j in range(len(S)))+xsum((d_plus*s_plus[j]+d_minus*s_plus[j])*z[v][j] for j in range(len(S)))-d_minus*q[v]
+        model += h[v] >= xsum(distance_matrix[i][j] * (z[v][i]+z[v][j]-1) for j in range(len(S)))+xsum((d_plus*s_minus[j]+d_minus*s_minus[j])*z[v][j] for j in range(len(S)))-d_plus*(Qv-q[v])
 
+H = maximize(h[0])+maximize(h[1])
 
-model.objective = minimize(total)
+model.objective = minimize(H)
 
 model.optimize()
+
+
+
 
 vehicle1_cluster=[]
 vehicle2_cluster=[]
@@ -103,7 +106,11 @@ for i in range(len(S)):
     if z[1][i].x==1:
         vehicle2_cluster.append(i)
 
+variable_values = [v.x for v in model.vars]
 
+    # Iterate over the variable values and print the index and corresponding value
+for i, value in enumerate(variable_values):
+    print("Variable index:", i, "Value:", value)
 vehicle1_cluster_df = station.loc[vehicle1_cluster]
 
 vehicle1_cluster_df.drop_duplicates(inplace = True)
@@ -216,6 +223,7 @@ for v in range(vehicle_num):
 
 
 model.optimize()
+
 
 
 for t in range(time_interval):
